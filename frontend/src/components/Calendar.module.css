@@ -620,8 +620,97 @@
   background: #f8f9fa;
 }
 
-.error {
-  color: #d93025;
-  font-size: 12px;
-  margin-top: 8px;
+/* Toolbar */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  border-bottom: 1px solid #edebe9;
+  background: white;
+  margin-bottom: 16px;
+}
+
+.toolbarBtn {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #252423;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.toolbarBtn:hover {
+  background: #edebe9;
+}
+
+/* Toggle Switch */
+.toggleSwitch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+}
+
+.toggleSwitch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 20px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked+.slider {
+  background-color: #0f6cbd;
+}
+
+input:checked+.slider:before {
+  transform: translateX(16px);
+}
+
+/* Rich Text Icons */
+.richTextToolbar {
+  display: flex;
+  gap: 12px;
+  padding: 8px;
+  background: #f0f0f0;
+  border-top: 1px solid #edebe9;
+  border-radius: 0 0 4px 4px;
+}
+
+.editorIcon {
+  cursor: pointer;
+  color: #605e5c;
+  display: flex;
+  align-items: center;
+}
+
+.editorIcon:hover {
+  color: #201f1e;
 }

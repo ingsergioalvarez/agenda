@@ -9,10 +9,11 @@ export default function Calendar({ user, events, onRefresh }) {
   const [viewMode, setViewMode] = useState('create')
   const [selectedEvent, setSelectedEvent] = useState(null)
 
-  const [formData, setFormData] = useState({ title: '', start_time: '', end_time: '', participants: [], anonymous: 0, description: '' })
+  const [formData, setFormData] = useState({ title: '', start_time: '', end_time: '', participants: [], anonymous: 0, description: '', location: '', meeting_link: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [locationType, setLocationType] = useState('physical') // 'physical' | 'virtual'
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -30,12 +31,26 @@ export default function Calendar({ user, events, onRefresh }) {
     e.preventDefault()
     setError('')
 
+    if (!formData.title.trim()) {
+      setError('❌ Falta el título del evento')
+      return
+    }
+
+    if (!formData.start_time || !formData.end_time) {
+      setError('❌ Faltan las horas de inicio o fin')
+      return
+    }
+
     if (new Date(formData.start_time) >= new Date(formData.end_time)) {
       setError('❌ La hora de fin debe ser posterior a la de inicio')
       return
     }
 
     setLoading(true)
+
+    // Construct final location/link based on type
+    const finalLocation = locationType === 'physical' ? formData.location : 'Reunión de Microsoft Teams'
+    const finalMeetingLink = locationType === 'virtual' ? `https://teams.microsoft.com/l/meetup-join/${Date.now()}` : ''
 
     try {
       const res = await fetch('/api/events', {
@@ -48,9 +63,11 @@ export default function Calendar({ user, events, onRefresh }) {
           title: formData.title,
           start_time: formData.start_time,
           end_time: formData.end_time,
-          participants: formData.participants, // Now sends array of objects
+          participants: formData.participants,
           anonymous: formData.anonymous,
-          description: formData.description
+          description: formData.description,
+          location: finalLocation,
+          meeting_link: finalMeetingLink
         })
       })
 
@@ -230,39 +247,96 @@ export default function Calendar({ user, events, onRefresh }) {
 
             {viewMode === 'create' ? (
               <>
-                <div className={styles.quickHeader}>
-                  <button type="submit" className={styles.btnPrimary} onClick={handleCreate}>Guardar</button>
-                  <button type="button" className={styles.linkBtn} style={{ color: '#201f1e' }} onClick={() => setShowForm(false)}>Descartar</button>
-                  <button className={styles.closeBtn} onClick={() => setShowForm(false)} style={{ marginLeft: 'auto' }}>✕</button>
-                </div>
+                {isExtended ? (
+                  <div className={styles.toolbar}>
+                    <div className={styles.toolbarBtn}>Opciones de respuesta <span style={{ fontSize: 10 }}>▼</span></div>
+                    <div className={styles.toolbarBtn}>{Icons.Clock} Ocupado <span style={{ fontSize: 10 }}>▼</span></div>
+                    <div className={styles.toolbarBtn}>{Icons.Bell} 15 minutos antes <span style={{ fontSize: 10 }}>▼</span></div>
+                    <div className={styles.toolbarBtn}>Clasificar <span style={{ fontSize: 10 }}>▼</span></div>
+                    <button
+                      className={styles.toolbarBtn}
+                      onClick={() => setFormData({ ...formData, anonymous: formData.anonymous ? 0 : 1 })}
+                      style={{ background: formData.anonymous ? '#e6f2fd' : 'transparent', color: formData.anonymous ? '#0f6cbd' : 'inherit' }}
+                    >
+                      {formData.anonymous ? Icons.Lock : Icons.Globe} {formData.anonymous ? 'Privado' : 'Público'}
+                    </button>
+                    <div className={styles.toolbarBtn}>...</div>
+                  </div>
+                ) : (
+                  <div className={styles.quickHeader}>
+                    <button type="submit" className={styles.btnPrimary} onClick={handleCreate}>Guardar</button>
+                    <button type="button" className={styles.linkBtn} style={{ color: '#201f1e' }} onClick={() => setShowForm(false)}>Descartar</button>
+                    <button className={styles.closeBtn} onClick={() => setShowForm(false)} style={{ marginLeft: 'auto' }}>✕</button>
+                  </div>
+                )}
 
                 <div className={styles.modalBody}>
+                  {isExtended && (
+                    <div className={styles.quickHeader} style={{ marginBottom: 16, borderRadius: 4, background: 'transparent', padding: 0 }}>
+                      <button type="submit" className={styles.btnPrimary} onClick={handleCreate}>Guardar</button>
+                    </div>
+                  )}
+
                   {error && <div style={{ color: '#d93025', background: '#fce8e6', padding: '8px', borderRadius: '4px', marginBottom: '12px', fontSize: '14px' }}>{error}</div>}
 
-                  <div style={{ marginBottom: 16 }}>
-                    <input
-                      className={styles.modalTitleInput}
-                      type="text"
-                      name="title"
-                      placeholder="Agregar un título"
-                      value={formData.title}
-                      onChange={handleInputChange}
-                      required
-                      autoFocus
-                    />
+                  <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ flex: 1 }}>
+                      <input
+                        className={styles.modalTitleInput}
+                        type="text"
+                        name="title"
+                        placeholder="Agregar un título"
+                        value={formData.title}
+                        onChange={handleInputChange}
+                        required
+                        autoFocus
+                      />
+                    </div>
+                    {isExtended && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#605e5c' }}>
+                        <label className={styles.toggleSwitch}>
+                          <input type="checkbox" />
+                          <span className={styles.slider}></span>
+                        </label>
+                        <span>{Icons.Video} Reunión de Teams</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className={styles.row}>
+                    <div className={styles.iconLabel}>{Icons.UserPlus}</div>
+                    <div className={styles.inputGroup} style={{ display: 'block' }}>
+                      <UserAutocomplete
+                        selectedParticipants={formData.participants}
+                        onChange={handleParticipantsChange}
+                      />
+                    </div>
                   </div>
 
                   <div className={styles.row}>
                     <div className={styles.iconLabel}>{Icons.Clock}</div>
-                    <div className={styles.inputGroup} style={{ flexDirection: isExtended ? 'row' : 'column' }}>
+                    <div className={styles.inputGroup} style={{ flexDirection: isExtended ? 'row' : 'column', alignItems: isExtended ? 'center' : 'stretch' }}>
                       <div style={{ display: 'flex', gap: 8 }}>
                         <input className={styles.input} type="date" value={formData.start_time.split('T')[0]} onChange={(e) => setFormData({ ...formData, start_time: `${e.target.value}T${formData.start_time.split('T')[1]}` })} />
                         <input className={styles.input} type="time" value={formData.start_time.split('T')[1]} onChange={(e) => setFormData({ ...formData, start_time: `${formData.start_time.split('T')[0]}T${e.target.value}` })} />
                       </div>
+                      {isExtended && <span>-</span>}
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <input className={styles.input} type="date" value={formData.end_time.split('T')[0]} onChange={(e) => setFormData({ ...formData, end_time: `${e.target.value}T${formData.end_time.split('T')[1]}` })} />
-                        <input className={styles.input} type="time" value={formData.end_time.split('T')[1]} onChange={(e) => setFormData({ ...formData, end_time: `${formData.end_time.split('T')[0]}T${e.target.value}` })} />
+                        {!isExtended && <input className={styles.input} type="date" value={formData.end_time.split('T')[0]} onChange={(e) => setFormData({ ...formData, end_time: `${e.target.value}T${formData.end_time.split('T')[1]}` })} />}
+                        {isExtended && <input className={styles.input} type="time" value={formData.end_time.split('T')[1]} onChange={(e) => setFormData({ ...formData, end_time: `${formData.end_time.split('T')[0]}T${e.target.value}` })} />}
+                        {isExtended && <input className={styles.input} type="date" value={formData.end_time.split('T')[0]} onChange={(e) => setFormData({ ...formData, end_time: `${e.target.value}T${formData.end_time.split('T')[1]}` })} />}
+                        {!isExtended && <input className={styles.input} type="time" value={formData.end_time.split('T')[1]} onChange={(e) => setFormData({ ...formData, end_time: `${formData.end_time.split('T')[0]}T${e.target.value}` })} />}
                       </div>
+
+                      {isExtended && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#605e5c', marginLeft: 16 }}>
+                          <label className={styles.toggleSwitch}>
+                            <input type="checkbox" />
+                            <span className={styles.slider}></span>
+                          </label>
+                          <span>Todo el día</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -282,26 +356,140 @@ export default function Calendar({ user, events, onRefresh }) {
                       </div>
                       <div className={styles.row}>
                         <div className={styles.iconLabel}>{Icons.MapPin}</div>
-                        <div className={styles.inputGroup}>
-                          <input className={styles.input} type="text" placeholder="Buscar una ubicación" />
+                        <div className={styles.inputGroup} style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
+                          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                            <button
+                              type="button"
+                              onClick={() => setLocationType('physical')}
+                              style={{
+                                padding: '6px 12px',
+                                borderRadius: 16,
+                                border: '1px solid #edebe9',
+                                background: locationType === 'physical' ? '#e6f2fd' : 'white',
+                                color: locationType === 'physical' ? '#0f6cbd' : '#252423',
+                                cursor: 'pointer',
+                                fontWeight: 600,
+                                fontSize: 13
+                              }}
+                            >
+                              Presencial
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setLocationType('virtual')}
+                              style={{
+                                padding: '6px 12px',
+                                borderRadius: 16,
+                                border: '1px solid #edebe9',
+                                background: locationType === 'virtual' ? '#e6f2fd' : 'white',
+                                color: locationType === 'virtual' ? '#0f6cbd' : '#252423',
+                                cursor: 'pointer',
+                                fontWeight: 600,
+                                fontSize: 13
+                              }}
+                            >
+                              Virtual / Teams
+                            </button>
+                          </div>
+
+                          {locationType === 'physical' ? (
+                            <input
+                              className={styles.input}
+                              type="text"
+                              name="location"
+                              placeholder="Buscar una ubicación (Sala, Edificio...)"
+                              value={formData.location}
+                              onChange={handleInputChange}
+                            />
+                          ) : (
+                            <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px', background: '#f0f0f0', borderRadius: 4, color: '#605e5c', fontSize: 13 }}>
+                              {Icons.Video}
+                              <span>Reunión de Microsoft Teams (enlace se generará al guardar)</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </>
+                  )}
+
+                  {isExtended && (
+                    <div className={styles.row}>
+                      <div className={styles.iconLabel}>{Icons.MapPin}</div>
+                      <div className={styles.inputGroup} style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
+                        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                          <button
+                            type="button"
+                            onClick={() => setLocationType('physical')}
+                            style={{
+                              padding: '6px 12px',
+                              borderRadius: 16,
+                              border: '1px solid #edebe9',
+                              background: locationType === 'physical' ? '#e6f2fd' : 'white',
+                              color: locationType === 'physical' ? '#0f6cbd' : '#252423',
+                              cursor: 'pointer',
+                              fontWeight: 600,
+                              fontSize: 13
+                            }}
+                          >
+                            Presencial
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setLocationType('virtual')}
+                            style={{
+                              padding: '6px 12px',
+                              borderRadius: 16,
+                              border: '1px solid #edebe9',
+                              background: locationType === 'virtual' ? '#e6f2fd' : 'white',
+                              color: locationType === 'virtual' ? '#0f6cbd' : '#252423',
+                              cursor: 'pointer',
+                              fontWeight: 600,
+                              fontSize: 13
+                            }}
+                          >
+                            Virtual / Teams
+                          </button>
+                        </div>
+
+                        {locationType === 'physical' ? (
+                          <input
+                            className={styles.input}
+                            type="text"
+                            name="location"
+                            placeholder="Buscar una ubicación (Sala, Edificio...)"
+                            value={formData.location}
+                            onChange={handleInputChange}
+                          />
+                        ) : (
+                          <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px', background: '#f0f0f0', borderRadius: 4, color: '#605e5c', fontSize: 13 }}>
+                            {Icons.Video}
+                            <span>Reunión de Microsoft Teams (enlace se generará al guardar)</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   )}
 
                   <div className={styles.row}>
                     <div className={styles.iconLabel}>{!isExtended && Icons.AlignLeft}</div>
                     <div className={styles.inputGroup}>
                       {isExtended ? (
-                        <div style={{ width: '100%' }}>
-                          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Descripción</label>
+                        <div style={{ width: '100%', border: '1px solid #8a8886', borderRadius: 4 }}>
                           <textarea
                             className={styles.input}
+                            style={{ border: 'none', resize: 'none', minHeight: 150 }}
                             name="description"
                             value={formData.description}
                             onChange={handleInputChange}
-                            rows={6}
                           />
+                          <div className={styles.richTextToolbar}>
+                            <span className={styles.editorIcon} title="Attach">{Icons.Link}</span>
+                            <span className={styles.editorIcon} title="Image">{Icons.Image}</span>
+                            <span className={styles.editorIcon} title="Emoji">{Icons.Smile}</span>
+                            <span className={styles.editorIcon} style={{ fontWeight: 'bold' }}>B</span>
+                            <span className={styles.editorIcon} style={{ fontStyle: 'italic' }}>I</span>
+                            <span className={styles.editorIcon} style={{ textDecoration: 'underline' }}>U</span>
+                          </div>
                         </div>
                       ) : (
                         <input
@@ -315,18 +503,7 @@ export default function Calendar({ user, events, onRefresh }) {
                     </div>
                   </div>
 
-                  {isExtended && (
-                    <div className={styles.row}>
-                      <div className={styles.iconLabel}></div>
-                      <div className={styles.inputGroup} style={{ display: 'block' }}>
-                        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Invitados</label>
-                        <UserAutocomplete
-                          selectedParticipants={formData.participants}
-                          onChange={handleParticipantsChange}
-                        />
-                      </div>
-                    </div>
-                  )}
+
 
                   <div className={styles.row}>
                     <div className={styles.iconLabel}></div>

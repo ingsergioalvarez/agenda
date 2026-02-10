@@ -60,9 +60,20 @@ app.get('/events', authRequired, async (req, res) => {
 
 // Create event: checks conflicts for participants (internal users only)
 app.post('/events', authRequired, async (req, res) => {
-  const { title, start_time, end_time, participants = [], description = '', anonymous = 0 } = req.body;
+  const { title, start_time, end_time, participants = [], description = '', anonymous = 0, location = '', meeting_link = '' } = req.body;
   const ownerId = req.user.id;
   if (!title || !start_time || !end_time) return res.status(400).json({ error: 'Missing fields' });
+
+  if (new Date(start_time) >= new Date(end_time)) {
+    return res.status(400).json({ error: 'La hora de fin debe ser posterior a la de inicio' });
+  }
+
+  // ... (keep conflict check logic) ... 
+  // Wait, I can't skip the conflict check logic in the replacement if I target lines 63-96.
+  // I should target just the destructuring and the INSERT.
+  // Optimally, I will do two edits or one big block if conflict check is small.
+  // Conflict check is lines 71-94.
+  // I will just replace the top destructuring first.
 
   if (new Date(start_time) >= new Date(end_time)) {
     return res.status(400).json({ error: 'La hora de fin debe ser posterior a la de inicio' });
@@ -93,7 +104,7 @@ app.post('/events', authRequired, async (req, res) => {
     if (conflicts.length) return res.status(409).json({ error: `Conflict for user ID ${uid}` });
   }
 
-  const result = await db.query('INSERT INTO events (title,start_time,end_time,owner_id,description,anonymous) VALUES (?,?,?,?,?,?)', [title, start_time, end_time, ownerId, description, anonymous ? 1 : 0]);
+  const result = await db.query('INSERT INTO events (title,start_time,end_time,owner_id,description,anonymous,location,meeting_link) VALUES (?,?,?,?,?,?,?,?)', [title, start_time, end_time, ownerId, description, anonymous ? 1 : 0, location, meeting_link]);
   const eventId = result.insertId;
 
   // Add owner
