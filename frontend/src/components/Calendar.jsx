@@ -89,21 +89,7 @@ export default function Calendar({ user, events, onRefresh }) {
     return events.filter(e => e.start_time.startsWith(dateStr))
   }
 
-  const openCreateModal = (day) => {
-    setViewMode('create')
-    setSelectedDate(day)
-    setError('')
-    const dateStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    setFormData({
-      title: '',
-      start_time: `${dateStr}T09:00`,
-      end_time: `${dateStr}T10:00`,
-      participants: [],
-      anonymous: 0,
-      description: ''
-    })
-    setShowForm(true)
-  }
+
 
   const openViewModal = (event, e) => {
     e.stopPropagation()
@@ -132,35 +118,74 @@ export default function Calendar({ user, events, onRefresh }) {
     });
   }
 
+  const [isExtended, setIsExtended] = useState(false)
+
+  // ... (keep existing handleCreate, etc.)
+
+  const openCreateModal = (day) => {
+    setViewMode('create')
+    setIsExtended(false) // Default to quick view
+    setSelectedDate(day)
+    setError('')
+    const dateStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    setFormData({
+      title: '',
+      start_time: `${dateStr}T09:00`,
+      end_time: `${dateStr}T10:00`,
+      participants: [],
+      anonymous: 0,
+      description: ''
+    })
+    setShowForm(true)
+  }
+
+  // Icons
+  const Icons = {
+    Clock: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
+    MapPin: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>,
+    AlignLeft: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="17" y1="10" x2="3" y2="10" /><line x1="21" y1="6" x2="3" y2="6" /><line x1="21" y1="14" x2="3" y2="14" /><line x1="17" y1="18" x2="3" y2="18" /></svg>,
+    Repeat: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="17 1 21 5 17 9" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><polyline points="7 23 3 19 7 15" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg>,
+    Bell: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
+  }
+
   return (
     <div className={styles.container}>
       <aside className={styles.sidebar}>
+        <div className={styles.miniCalendar}>
+          {/* Placeholder for mini calendar - just showing current month name for now */}
+          <div style={{ fontWeight: '600', marginBottom: 10 }}>{currentMonth.toLocaleString('es-ES', { month: 'long', year: 'numeric' })}</div>
+          {/* Simple grid representation could go here */}
+        </div>
+
         <button className={styles.createBtn} onClick={() => openCreateModal(new Date().getDate())}>
-          <span className={styles.createIcon}>+</span>
-          <span>Crear</span>
+          Agregar calendario
         </button>
-        {/* Future: Mini calendar or filter list can go here */}
-        <div style={{ marginTop: 20 }}>
-          <h3 style={{ fontSize: 14, color: '#5f6368', marginBottom: 10 }}>Mis Calendarios</h3>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14 }}>
-            <input type="checkbox" checked readOnly style={{ accentColor: '#1a73e8' }} />
-            <span>{user.name}</span>
+
+        <div style={{ marginTop: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, marginBottom: 8, cursor: 'pointer' }}>
+            <span style={{ transform: 'rotate(90deg)', fontSize: 12 }}>❯</span>
+            <span style={{ fontWeight: 600 }}>{user.email}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, paddingLeft: 16 }}>
+            <input type="checkbox" checked readOnly style={{ accentColor: '#0f6cbd' }} />
+            <span>Calendario</span>
           </div>
         </div>
       </aside>
 
       <main className={styles.main}>
         <header className={styles.header}>
-          <div className={styles.navControls}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <h2 className={styles.monthTitle}>
               {currentMonth.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
             </h2>
-            <div>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
               <button className={styles.navBtn} onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}>❮</button>
               <button className={styles.navBtn} onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}>❯</button>
               <button className={styles.navBtn} onClick={() => setCurrentMonth(new Date())}>Hoy</button>
             </div>
           </div>
+
         </header>
 
         <div className={styles.grid}>
@@ -201,123 +226,165 @@ export default function Calendar({ user, events, onRefresh }) {
 
       {showForm && (
         <div className={styles.modalOverlay} onClick={() => setShowForm(false)}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <button className={styles.closeBtn} onClick={() => setShowForm(false)}>✕</button>
-            </div>
+          <div className={`${styles.modal} ${isExtended ? styles.extended : ''}`} onClick={e => e.stopPropagation()}>
 
-            <div className={styles.modalContent}>
-              {viewMode === 'create' ? (
-                <>
-                  <h2 className={styles.modalTitle}>Nuevo evento</h2>
+            {viewMode === 'create' ? (
+              <>
+                <div className={styles.quickHeader}>
+                  <button type="submit" className={styles.btnPrimary} onClick={handleCreate}>Guardar</button>
+                  <button type="button" className={styles.linkBtn} style={{ color: '#201f1e' }} onClick={() => setShowForm(false)}>Descartar</button>
+                  <button className={styles.closeBtn} onClick={() => setShowForm(false)} style={{ marginLeft: 'auto' }}>✕</button>
+                </div>
+
+                <div className={styles.modalBody}>
                   {error && <div style={{ color: '#d93025', background: '#fce8e6', padding: '8px', borderRadius: '4px', marginBottom: '12px', fontSize: '14px' }}>{error}</div>}
-                  <form onSubmit={handleCreate}>
-                    <div className={styles.formGroup}>
-                      <input
-                        className={styles.input}
-                        type="text"
-                        name="title"
-                        placeholder="Añade un título"
-                        value={formData.title}
-                        onChange={handleInputChange}
-                        required
-                        autoFocus
-                      />
-                    </div>
 
-                    <div className={styles.formGroup} style={{ display: 'flex', gap: 16 }}>
-                      <input
-                        className={styles.input}
-                        type="datetime-local"
-                        name="start_time"
-                        value={formData.start_time}
-                        onChange={handleInputChange}
-                        required
-                      />
-                      <span style={{ alignSelf: 'center' }}>-</span>
-                      <input
-                        className={styles.input}
-                        type="datetime-local"
-                        name="end_time"
-                        value={formData.end_time}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
+                  <div style={{ marginBottom: 16 }}>
+                    <input
+                      className={styles.modalTitleInput}
+                      type="text"
+                      name="title"
+                      placeholder="Agregar un título"
+                      value={formData.title}
+                      onChange={handleInputChange}
+                      required
+                      autoFocus
+                    />
+                  </div>
 
-                    <div className={styles.formGroup}>
-                      <label style={{ display: 'block', fontSize: 12, color: '#5f6368', marginBottom: 4 }}>Invitados</label>
-                      <UserAutocomplete
-                        selectedParticipants={formData.participants}
-                        onChange={handleParticipantsChange}
-                      />
-                    </div>
-
-                    <div className={styles.formGroup}>
-                      <textarea
-                        className={styles.input}
-                        name="description"
-                        placeholder="Descripción"
-                        value={formData.description}
-                        onChange={handleInputChange}
-                        rows={3}
-                      />
-                    </div>
-
-                    <div className={styles.formGroup} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <input
-                        type="checkbox"
-                        name="anonymous"
-                        checked={formData.anonymous}
-                        onChange={handleInputChange}
-                        id="anonCheck"
-                      />
-                      <label htmlFor="anonCheck" style={{ fontSize: 14 }}>Evento privado (solo visible para participantes)</label>
-                    </div>
-
-                    <div className={styles.modalActions}>
-                      <button type="submit" className={styles.saveBtn} disabled={loading}>{loading ? 'Guardando...' : 'Guardar'}</button>
-                    </div>
-                  </form>
-                </>
-              ) : (
-                <div style={{ padding: '0 10px 10px' }}>
-                  <h2 style={{ fontSize: '22px', color: '#3c4043', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ width: '18px', height: '18px', background: '#1a73e8', borderRadius: '4px', display: 'inline-block' }}></span>
-                    {selectedEvent.title}
-                    {selectedEvent.anonymous ? <span style={{ fontSize: '0.8em' }}>🔒</span> : null}
-                  </h2>
-
-                  <div style={{ marginBottom: '16px', color: '#5f6368', fontSize: '14px', lineHeight: '1.5' }}>
-                    <div style={{ fontWeight: '500', color: '#3c4043' }}>
-                      {formatDateTime(selectedEvent.start_time)}
-                      <br />
-                      a
-                      <br />
-                      {formatDateTime(selectedEvent.end_time)}
+                  <div className={styles.row}>
+                    <div className={styles.iconLabel}>{Icons.Clock}</div>
+                    <div className={styles.inputGroup} style={{ flexDirection: isExtended ? 'row' : 'column' }}>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <input className={styles.input} type="date" value={formData.start_time.split('T')[0]} onChange={(e) => setFormData({ ...formData, start_time: `${e.target.value}T${formData.start_time.split('T')[1]}` })} />
+                        <input className={styles.input} type="time" value={formData.start_time.split('T')[1]} onChange={(e) => setFormData({ ...formData, start_time: `${formData.start_time.split('T')[0]}T${e.target.value}` })} />
+                      </div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <input className={styles.input} type="date" value={formData.end_time.split('T')[0]} onChange={(e) => setFormData({ ...formData, end_time: `${e.target.value}T${formData.end_time.split('T')[1]}` })} />
+                        <input className={styles.input} type="time" value={formData.end_time.split('T')[1]} onChange={(e) => setFormData({ ...formData, end_time: `${formData.end_time.split('T')[0]}T${e.target.value}` })} />
+                      </div>
                     </div>
                   </div>
 
+                  {!isExtended && (
+                    <>
+                      <div className={styles.row}>
+                        <div className={styles.iconLabel}>{Icons.Repeat}</div>
+                        <div className={styles.inputGroup}>
+                          <button type="button" className={styles.btnSecondary} style={{ width: '100%', textAlign: 'left' }}>No repetir</button>
+                        </div>
+                      </div>
+                      <div className={styles.row}>
+                        <div className={styles.iconLabel}>{Icons.Bell}</div>
+                        <div className={styles.inputGroup}>
+                          <button type="button" className={styles.btnSecondary} style={{ width: '100%', textAlign: 'left' }}>15 minutos antes</button>
+                        </div>
+                      </div>
+                      <div className={styles.row}>
+                        <div className={styles.iconLabel}>{Icons.MapPin}</div>
+                        <div className={styles.inputGroup}>
+                          <input className={styles.input} type="text" placeholder="Buscar una ubicación" />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  <div className={styles.row}>
+                    <div className={styles.iconLabel}>{!isExtended && Icons.AlignLeft}</div>
+                    <div className={styles.inputGroup}>
+                      {isExtended ? (
+                        <div style={{ width: '100%' }}>
+                          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Descripción</label>
+                          <textarea
+                            className={styles.input}
+                            name="description"
+                            value={formData.description}
+                            onChange={handleInputChange}
+                            rows={6}
+                          />
+                        </div>
+                      ) : (
+                        <input
+                          className={styles.input}
+                          name="description"
+                          placeholder="Agregar una descripción"
+                          value={formData.description}
+                          onChange={handleInputChange}
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  {isExtended && (
+                    <div className={styles.row}>
+                      <div className={styles.iconLabel}></div>
+                      <div className={styles.inputGroup} style={{ display: 'block' }}>
+                        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Invitados</label>
+                        <UserAutocomplete
+                          selectedParticipants={formData.participants}
+                          onChange={handleParticipantsChange}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className={styles.row}>
+                    <div className={styles.iconLabel}></div>
+                    <div className={styles.inputGroup}>
+                      <label className={styles.checkboxLabel}>
+                        <input
+                          type="checkbox"
+                          name="anonymous"
+                          checked={formData.anonymous}
+                          onChange={handleInputChange}
+                        />
+                        Evento privado
+                      </label>
+                    </div>
+                  </div>
+
+                </div>
+
+                {!isExtended && (
+                  <div className={styles.footer}>
+                    <button type="button" className={styles.btnSecondary} onClick={() => setIsExtended(true)}>Más opciones</button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div style={{ padding: '0 10px 10px' }}>
+                <div className={styles.quickHeader} style={{ background: 'white', border: 'none' }}>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <span style={{ width: '18px', height: '18px', background: '#0f6cbd', borderRadius: '4px', display: 'inline-block' }}></span>
+                    <h2 style={{ fontSize: '20px', color: '#252423', margin: 0, fontWeight: 600 }}>
+                      {selectedEvent.title}
+                      {selectedEvent.anonymous ? <span style={{ fontSize: '0.8em', marginLeft: 8 }}>🔒</span> : null}
+                    </h2>
+                  </div>
+                  <button className={styles.closeBtn} onClick={() => setShowForm(false)}>✕</button>
+                </div>
+
+                <div style={{ padding: '0 16px 16px 42px', color: '#605e5c', fontSize: '14px', lineHeight: '1.5' }}>
+                  <div style={{ fontWeight: '600', color: '#252423', marginBottom: 12 }}>
+                    {formatDateTime(selectedEvent.start_time)} <br /> hasta <br /> {formatDateTime(selectedEvent.end_time)}
+                  </div>
+
                   {selectedEvent.description && (
-                    <div style={{ marginBottom: '16px', color: '#3c4043', fontSize: '14px', whiteSpace: 'pre-wrap' }}>
+                    <div style={{ marginBottom: '16px', color: '#252423', whiteSpace: 'pre-wrap' }}>
                       {selectedEvent.description}
                     </div>
                   )}
 
-                  <div style={{ marginBottom: '16px', color: '#5f6368', fontSize: '14px' }}>
+                  <div style={{ marginBottom: '16px' }}>
                     <strong>Visibilidad:</strong> {selectedEvent.anonymous ? 'Privado' : 'Público'}
                   </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
-                    <button onClick={() => setShowForm(false)} className={styles.closeBtn} style={{ position: 'static', padding: '8px 16px', background: '#f1f3f4', borderRadius: '4px' }}>Cerrar</button>
-                  </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+
           </div>
-        </div >
-      )
-      }
-    </div >
+        </div>
+      )}
+    </div>
   )
 }

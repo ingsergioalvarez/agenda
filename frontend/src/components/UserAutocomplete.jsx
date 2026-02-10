@@ -61,7 +61,7 @@ export default function UserAutocomplete({ selectedParticipants = [], onChange }
     const showAddExternal = query.length >= 3 && !suggestions.some(s => s.email === query) && !selectedParticipants.some(p => p.email === query)
 
     return (
-        <div style={{ position: 'relative', marginBottom: '1rem' }}>
+        <div style={{ position: 'relative' }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '5px' }}>
                 {selectedParticipants.map((u, idx) => (
                     <span key={idx} style={{
