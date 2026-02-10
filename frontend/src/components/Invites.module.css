@@ -1,0 +1,95 @@
+.container {
+  padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 24px;
+  color: #202124;
+  margin-bottom: 24px;
+}
+
+.empty {
+  text-align: center;
+  color: #5f6368;
+  padding: 40px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #dadce0;
+}
+
+.invitesList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.inviteCard {
+  background: white;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.inviteBody {
+  display: flex;
+  gap: 16px;
+}
+
+.iconLarge {
+  font-size: 32px;
+  color: #1a73e8;
+}
+
+.inviteInfo h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  color: #202124;
+}
+
+.time {
+  font-size: 14px;
+  color: #5f6368;
+  margin-bottom: 8px;
+}
+
+.hint {
+  font-size: 12px;
+  font-style: italic;
+  color: #70757a;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.acceptBtn {
+  background: #1a73e8;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.rejectBtn {
+  background: white;
+  color: #d93025;
+  border: 1px solid #d93025;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.status {
+  font-weight: 500;
+  color: #5f6368;
+}

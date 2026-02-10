@@ -1,0 +1,58 @@
+version: '3.8'
+services:
+  db:
+    image: mysql:8.0
+    container_name: agenda_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: agenda_db
+      MYSQL_USER: agenda_user
+      MYSQL_PASSWORD: agenda_pass
+    ports:
+      - '3306:3306'
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./backend/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: node:18-alpine
+    container_name: agenda_backend
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm run seed && node index.js"
+    ports:
+      - '4001:4000'
+    environment:
+      - DB_HOST=db
+      - DB_USER=agenda_user
+      - DB_PASSWORD=agenda_pass
+      - DB_NAME=agenda_db
+      - JWT_SECRET=change_this_secret_in_production
+      - NODE_ENV=production
+      - PORT=4000
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    image: node:18-alpine
+    container_name: agenda_frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm run build && npm install -g serve && serve -s dist -l 3000"
+    ports:
+      - '3002:3000'
+    depends_on:
+      - backend
+
+volumes:
+  db_data:

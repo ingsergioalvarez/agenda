@@ -1,0 +1,115 @@
+.container {
+  padding: 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 24px;
+  color: #202124;
+  margin-bottom: 24px;
+}
+
+/* Stats */
+.stats {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.stat {
+  background: white;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  padding: 16px 24px;
+  flex: 1;
+  text-align: center;
+}
+
+.statValue {
+  font-size: 32px;
+  font-weight: 500;
+  color: #1a73e8;
+  margin-bottom: 4px;
+}
+
+.statLabel {
+  font-size: 14px;
+  color: #5f6368;
+}
+
+/* Section */
+.section {
+  background: white;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.section h2 {
+  font-size: 18px;
+  color: #202124;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #eff2f6;
+  padding-bottom: 12px;
+}
+
+/* Table */
+.tableHeader {
+  display: grid;
+  grid-template-columns: 1.5fr 2fr 1fr 1fr;
+  padding: 12px;
+  background: #f8f9fa;
+  font-weight: 500;
+  color: #5f6368;
+  font-size: 13px;
+  border-bottom: 2px solid #dadce0;
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 1.5fr 2fr 1fr 1fr;
+  padding: 16px 12px;
+  border-bottom: 1px solid #eff2f6;
+  align-items: center;
+  font-size: 14px;
+  color: #202124;
+}
+
+.tableRow:last-child {
+  border-bottom: none;
+}
+
+.select {
+  padding: 6px;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.badge {
+  background: #e8f0fe;
+  color: #1967d2;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.deleteBtn {
+  background: none;
+  border: none;
+  color: #d93025;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.deleteBtn:hover {
+  text-decoration: underline;
+}
+
+.error {
+  color: #d93025;
+  margin-bottom: 16px;
+}
